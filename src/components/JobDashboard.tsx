@@ -81,6 +81,24 @@ const JobDashboard = () => {
     used: 5,
     total: 12,
   });
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [showJobDetails, setShowJobDetails] = useState(false);
+  const [showApplyDialog, setShowApplyDialog] = useState(false);
+  const [selectedResume, setSelectedResume] = useState("");
+  const [optimizeResume, setOptimizeResume] = useState(false);
+  const [coverLetterOption, setCoverLetterOption] = useState<"write" | "ai">(
+    "ai",
+  );
+  const [userResumes] = useState([
+    { id: "1", name: "Software Engineer Resume.pdf", uploadDate: "2023-06-01" },
+    {
+      id: "2",
+      name: "Frontend Developer Resume.pdf",
+      uploadDate: "2023-05-15",
+    },
+    { id: "3", name: "Full Stack Resume.pdf", uploadDate: "2023-04-20" },
+  ]);
+  const [hasUploadedResume] = useState(true);
 
   // Questionnaire state
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
@@ -386,6 +404,58 @@ const JobDashboard = () => {
           : loc,
       ),
     }));
+  };
+
+  const handleViewJobDetails = (job: Job) => {
+    setSelectedJob(job);
+    setShowJobDetails(true);
+  };
+
+  const handleApplyClick = () => {
+    setShowJobDetails(false);
+    setShowApplyDialog(true);
+  };
+
+  const handleSubmitApplication = () => {
+    // Here you would implement the actual application submission logic
+    console.log("Submitting application with:", {
+      job: selectedJob?.title,
+      resume: selectedResume,
+      optimizeResume,
+      coverLetterOption,
+    });
+    setShowApplyDialog(false);
+    setSelectedJob(null);
+    // Reset form
+    setSelectedResume("");
+    setOptimizeResume(false);
+    setCoverLetterOption("ai");
+  };
+
+  const getMissingSkills = (jobSkills: string[] = []) => {
+    if (!hasUploadedResume) return [];
+    // Mock user skills from uploaded resume
+    const userSkills = ["React", "JavaScript", "HTML", "CSS", "TypeScript"];
+    return jobSkills.filter(
+      (skill) =>
+        !userSkills.some(
+          (userSkill) =>
+            userSkill.toLowerCase().includes(skill.toLowerCase()) ||
+            skill.toLowerCase().includes(userSkill.toLowerCase()),
+        ),
+    );
+  };
+
+  const getMissingEducation = () => {
+    if (!hasUploadedResume) return null;
+    // Mock logic - in real app, this would analyze the resume
+    return "Master's Degree in Computer Science";
+  };
+
+  const getMissingCertificates = () => {
+    if (!hasUploadedResume) return [];
+    // Mock logic - in real app, this would analyze job requirements vs resume
+    return ["AWS Certified Solutions Architect", "Google Cloud Professional"];
   };
 
   const renderQuestionnaireStep = () => {
@@ -1037,7 +1107,12 @@ const JobDashboard = () => {
                   </CardContent>
                   <CardFooter className="pt-2">
                     <div className="flex justify-between w-full">
-                      <Button variant="outline" size="sm" className="text-sm">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-sm"
+                        onClick={() => handleViewJobDetails(job)}
+                      >
                         View Details
                       </Button>
                       <Button size="sm" className="text-sm">
@@ -1274,6 +1349,334 @@ const JobDashboard = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Job Details Dialog */}
+      <Dialog open={showJobDetails} onOpenChange={setShowJobDetails}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">
+              {selectedJob?.title}
+            </DialogTitle>
+            <div className="flex items-center gap-4 text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <Briefcase className="h-4 w-4" />
+                {selectedJob?.company}
+              </span>
+              <span className="flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+                {selectedJob?.location}
+              </span>
+              <span className="flex items-center gap-1">
+                <DollarSign className="h-4 w-4" />
+                {selectedJob?.salary}
+              </span>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            <div className="flex items-center justify-between">
+              <Badge className="bg-primary hover:bg-primary text-lg px-3 py-1">
+                {selectedJob?.matchPercentage}% Match
+              </Badge>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
+                  Posted {selectedJob?.posted}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  Deadline: {selectedJob?.deadline}
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Job Description</h3>
+              <div className="bg-muted/30 p-4 rounded-lg">
+                <p className="text-sm leading-relaxed">
+                  {selectedJob?.description}
+                </p>
+                <div className="mt-4">
+                  <h4 className="font-medium mb-2">Key Responsibilities:</h4>
+                  <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground">
+                    <li>
+                      Develop and maintain high-quality web applications using
+                      modern frameworks
+                    </li>
+                    <li>
+                      Collaborate with cross-functional teams to define and
+                      implement new features
+                    </li>
+                    <li>Write clean, maintainable, and well-documented code</li>
+                    <li>
+                      Participate in code reviews and contribute to team best
+                      practices
+                    </li>
+                    <li>
+                      Stay up-to-date with emerging technologies and industry
+                      trends
+                    </li>
+                  </ul>
+                </div>
+                <div className="mt-4">
+                  <h4 className="font-medium mb-2">Requirements:</h4>
+                  <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground">
+                    <li>
+                      Bachelor's degree in Computer Science or related field
+                    </li>
+                    <li>3+ years of experience in frontend development</li>
+                    <li>
+                      Strong proficiency in React, TypeScript, and modern
+                      JavaScript
+                    </li>
+                    <li>Experience with version control systems (Git)</li>
+                    <li>Excellent problem-solving and communication skills</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {selectedJob?.skills && selectedJob.skills.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Required Skills</h3>
+                <div className="flex flex-wrap gap-2">
+                  {selectedJob.skills.map((skill, index) => (
+                    <Badge key={index} variant="outline" className="text-sm">
+                      {skill}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {hasUploadedResume && selectedJob && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-3 text-amber-800">
+                  Resume Analysis
+                </h3>
+                <div className="space-y-4">
+                  {getMissingSkills(selectedJob.skills).length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-amber-700 mb-2">
+                        Missing Skills:
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {getMissingSkills(selectedJob.skills).map(
+                          (skill, index) => (
+                            <Badge
+                              key={index}
+                              variant="outline"
+                              className="bg-red-50 text-red-700 border-red-200"
+                            >
+                              {skill}
+                            </Badge>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {getMissingEducation() && (
+                    <div>
+                      <h4 className="font-medium text-amber-700 mb-2">
+                        Recommended Education:
+                      </h4>
+                      <Badge
+                        variant="outline"
+                        className="bg-blue-50 text-blue-700 border-blue-200"
+                      >
+                        {getMissingEducation()}
+                      </Badge>
+                    </div>
+                  )}
+
+                  {getMissingCertificates().length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-amber-700 mb-2">
+                        Suggested Certifications:
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {getMissingCertificates().map((cert, index) => (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="bg-green-50 text-green-700 border-green-200"
+                          >
+                            {cert}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button variant="outline" onClick={() => setShowJobDetails(false)}>
+              Close
+            </Button>
+            <Button
+              onClick={handleApplyClick}
+              className="bg-primary hover:bg-primary/90"
+            >
+              Apply for this Job
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Apply Dialog */}
+      <Dialog open={showApplyDialog} onOpenChange={setShowApplyDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">
+              Apply for {selectedJob?.title}
+            </DialogTitle>
+            <p className="text-muted-foreground">
+              Complete your application by selecting your resume and cover
+              letter preferences
+            </p>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Select Resume</h3>
+              <div className="space-y-3">
+                {userResumes.map((resume) => (
+                  <div
+                    key={resume.id}
+                    className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                      selectedResume === resume.id
+                        ? "border-primary bg-primary/5"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                    onClick={() => setSelectedResume(resume.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-primary"></div>
+                        <div>
+                          <p className="font-medium">{resume.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Uploaded on{" "}
+                            {new Date(resume.uploadDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      {selectedResume === resume.id && (
+                        <Check className="h-5 w-5 text-primary" />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Separator />
+
+            <div>
+              <h3 className="text-lg font-semibold mb-3">
+                Resume Optimization
+              </h3>
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div>
+                  <p className="font-medium">Optimize resume with AI</p>
+                  <p className="text-sm text-muted-foreground">
+                    Let AI enhance your resume to better match this job
+                    description
+                  </p>
+                </div>
+                <Switch
+                  checked={optimizeResume}
+                  onCheckedChange={setOptimizeResume}
+                />
+              </div>
+            </div>
+
+            <Separator />
+
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Cover Letter</h3>
+              <div className="space-y-3">
+                <div
+                  className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                    coverLetterOption === "ai"
+                      ? "border-primary bg-primary/5"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                  onClick={() => setCoverLetterOption("ai")}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-primary"></div>
+                      <div>
+                        <p className="font-medium">Generate with AI</p>
+                        <p className="text-sm text-muted-foreground">
+                          AI will create a personalized cover letter based on
+                          the job description
+                        </p>
+                      </div>
+                    </div>
+                    {coverLetterOption === "ai" && (
+                      <Check className="h-5 w-5 text-primary" />
+                    )}
+                  </div>
+                </div>
+
+                <div
+                  className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                    coverLetterOption === "write"
+                      ? "border-primary bg-primary/5"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                  onClick={() => setCoverLetterOption("write")}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-primary"></div>
+                      <div>
+                        <p className="font-medium">Write my own</p>
+                        <p className="text-sm text-muted-foreground">
+                          I'll write a custom cover letter for this application
+                        </p>
+                      </div>
+                    </div>
+                    {coverLetterOption === "write" && (
+                      <Check className="h-5 w-5 text-primary" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {coverLetterOption === "write" && (
+              <div>
+                <Label htmlFor="cover-letter">Cover Letter</Label>
+                <Textarea
+                  id="cover-letter"
+                  placeholder="Write your cover letter here..."
+                  className="min-h-[200px] mt-2"
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button variant="outline" onClick={() => setShowApplyDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmitApplication}
+              disabled={!selectedResume}
+              className="bg-primary hover:bg-primary/90"
+            >
+              Submit Application
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Questionnaire Dialog */}
       <Dialog open={showQuestionnaire} onOpenChange={setShowQuestionnaire}>
