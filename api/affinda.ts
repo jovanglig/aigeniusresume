@@ -18,10 +18,7 @@ class Affinda {
     };
   }
 
-  async uploadDocument(
-    file: Blob,
-    wait: boolean = false,
-  ): Promise<{ identifier: string }> {
+  async uploadDocument(file: Blob, wait: boolean = false): Promise<{ identifier: string }> {
     const formData = new FormData();
     formData.append("file", file);
 
@@ -36,15 +33,10 @@ class Affinda {
     return response.data;
   }
 
-  async getDocumentStatus(
-    identifier: string,
-  ): Promise<{ status: string; data?: any }> {
-    const response = await axios.get(
-      `${this.baseURL}/documents/${identifier}`,
-      {
-        headers: this.getHeaders(),
-      },
-    );
+  async getDocumentStatus(identifier: string): Promise<{ status: string; data?: any }> {
+    const response = await axios.get(`${this.baseURL}/documents/${identifier}`, {
+      headers: this.getHeaders(),
+    });
 
     return response.data;
   }
@@ -61,9 +53,7 @@ export default Affinda;
     const uploadResponse = await affinda.uploadDocument(file, true);
     console.log("Uploaded document identifier:", uploadResponse.identifier);
 
-    const statusResponse = await affinda.getDocumentStatus(
-      uploadResponse.identifier,
-    );
+    const statusResponse = await affinda.getDocumentStatus(uploadResponse.identifier);
     console.log("Document status:", statusResponse);
   } catch (error) {
     console.error("Error:", error);

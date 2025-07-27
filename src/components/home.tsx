@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import ResumeBuilder from "./ResumeBuilder";
 import JobDashboard from "./JobDashboard";
+import axiosClient from "../api/axios";
 
 interface ResumeSection {
   id: string;
@@ -41,7 +42,7 @@ const Home = () => {
   const [resumeMode, setResumeMode] = useState<
     "upload" | "create" | "optimize"
   >("upload");
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
@@ -89,22 +90,48 @@ const Home = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setUploadedFile(e.target.files[0]);
-      setAnalysisComplete(false);
+      console.log("File selected:", e.target.files[0]); // Debug log
+      setFile(e.target.files[0]); // Update the file state
+      setAnalysisComplete(false); // Reset analysis state
     }
   };
 
-  const handleAnalyze = () => {
-    if (!uploadedFile || !jobDescription) return;
-
+  const handleAnalyze = async () => {
+    console.log("handleAnalyze triggered");
+    console.log("File in state at handleAnalyze:", file); // Debug log
+  
+    if (!file) {
+      console.log("File is missing");
+      return;
+    }
+  
     setIsAnalyzing(true);
-
-    // Simulate analysis process
-    setTimeout(() => {
-      setIsAnalyzing(false);
+  
+    const formData = new FormData(); // Reintroduce FormData
+    formData.append("resume", file); // Append the file
+    formData.append("jobDescription", jobDescription); // Append the job description
+  
+    // Debug log to confirm FormData content
+    console.log("FormData content:", formData);
+    formData.forEach((value, key) => {
+      console.log(`${key}:`, value);
+    });
+  
+    try {
+      const response = await axiosClient.post("/api/analyze-resume", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data", // Ensure correct Content-Type
+        },
+      });
+  
+      const data = response.data;
+      setAtsScore(data.ats_score);
       setAnalysisComplete(true);
-      setAtsScore(72); // Mock score
-    }, 2000);
+    } catch (error) {
+      console.error("Error analyzing resume:", error);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const handleOptimizeResume = () => {
@@ -177,17 +204,17 @@ const Home = () => {
             </CardHeader>
             <CardContent>
               <div className="border-2 border-dashed rounded-lg p-8 text-center mb-6">
-                {uploadedFile ? (
+                {file ? (
                   <div className="flex items-center justify-center flex-col">
                     <FileText className="h-10 w-10 text-primary mb-2" />
-                    <p className="font-medium">{uploadedFile.name}</p>
+                    <p className="font-medium">{file.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      {(uploadedFile.size / 1024).toFixed(2)} KB
+                      {(file.size / 1024).toFixed(2)} KB
                     </p>
                     <Button
                       variant="outline"
                       className="mt-4"
-                      onClick={() => setUploadedFile(null)}
+                      onClick={() => setFile(null)} // Clear the file
                     >
                       Change File
                     </Button>
@@ -202,7 +229,7 @@ const Home = () => {
                       type="file"
                       accept=".pdf,.doc,.docx"
                       className="max-w-sm"
-                      onChange={handleFileChange}
+                      onChange={handleFileChange} // Attach the handler
                     />
                   </div>
                 )}
@@ -224,9 +251,9 @@ const Home = () => {
               </div>
 
               <Button
-                className="w-full mt-4"
+                className="w-full"
                 onClick={handleAnalyze}
-                disabled={!uploadedFile || isAnalyzing}
+                disabled={!file || isAnalyzing}
               >
                 {isAnalyzing ? "Analyzing..." : "Analyze Resume"}
               </Button>
@@ -484,3 +511,5 @@ const Home = () => {
 };
 
 export default Home;
+
+

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axiosClient from "@/api/axios";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -73,21 +74,42 @@ const ResumeScanner = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
+      console.log("File selected:", e.target.files[0]); // Debug log
       setFile(e.target.files[0]);
     }
   };
 
-  const handleAnalyze = () => {
-    if (!file || !jobDescription) return;
-
+  const handleAnalyze = async () => {
+    console.log("handleAnalyze triggered");
+    if (!file) {
+      console.log("File is missing");
+      return;
+    }
+  
     setIsAnalyzing(true);
-
-    // Simulate analysis process
-    setTimeout(() => {
-      setIsAnalyzing(false);
+  
+    const formData = new FormData();
+    formData.append("resume", file);
+    if (jobDescription) {
+      formData.append("jobDescription", jobDescription);
+    }
+  
+    try {
+      const response = await axiosClient.post("/api/analyze-resume", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+  
+      const data = response.data;
+      setAtsScore(data.ats_score);
+      // Update other state variables with analysis results if needed
       setAnalysisComplete(true);
-      setAtsScore(72); // Mock score
-    }, 2000);
+    } catch (error) {
+      console.error("Error analyzing resume:", error);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
@@ -143,9 +165,9 @@ const ResumeScanner = () => {
 
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-medium mb-2">Job Description</h3>
+                  <h3 className="text-lg font-medium mb-2">Job Descriptions</h3>
                   <Textarea
-                    placeholder="Paste the job description here to compare against your resume"
+                    placeholder="Paste the job description heres to compare against your resumes"
                     className="min-h-[150px]"
                     value={jobDescription}
                     onChange={(e) => setJobDescription(e.target.value)}
@@ -157,9 +179,9 @@ const ResumeScanner = () => {
               <Button
                 className="w-full"
                 onClick={handleAnalyze}
-                disabled={!file || !jobDescription || isAnalyzing}
+                disabled={!file || isAnalyzing}
               >
-                {isAnalyzing ? "Analyzing..." : "Analyze Resume"}
+                {isAnalyzing ? "Analyzing..." : "Analyze Resumew"}
               </Button>
             </CardFooter>
           </Card>
@@ -173,7 +195,7 @@ const ResumeScanner = () => {
               <CardDescription>
                 {analysisComplete
                   ? "Review how your resume matches the job description"
-                  : "Upload your resume and job description to see analysis"}
+                  : "Uploads your resume and job description to see analysis"}
               </CardDescription>
             </CardHeader>
             <CardContent>

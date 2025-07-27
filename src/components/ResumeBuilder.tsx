@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Slider } from "@/components/ui/slider";
 import {
   Carousel,
   CarouselContent,
@@ -38,6 +39,11 @@ interface ResumeSection {
   id: string;
   type: "experience" | "education" | "skills" | "summary";
   content: any;
+}
+
+interface SkillWithLevel {
+  name: string;
+  level: number; // 1-5 scale
 }
 
 interface ResumeTemplate {
@@ -102,6 +108,13 @@ const ResumeBuilder = ({
             "Node.js",
             "TypeScript",
             "UI/UX Design",
+          ],
+          skillsWithLevels: [
+            { name: "JavaScript", level: 4 },
+            { name: "React", level: 5 },
+            { name: "Node.js", level: 3 },
+            { name: "TypeScript", level: 4 },
+            { name: "UI/UX Design", level: 3 },
           ],
         },
       },
@@ -181,7 +194,7 @@ const ResumeBuilder = ({
           : type === "education"
             ? { institution: "", degree: "", field: "", year: "" }
             : type === "skills"
-              ? { list: [] }
+              ? { list: [], skillsWithLevels: [] }
               : { text: "" },
     };
     setSections([...sections, newSection]);
@@ -346,16 +359,41 @@ const ResumeBuilder = ({
             {sections
               .filter((s) => s.type === "skills")
               .map((section) => (
-                <div key={section.id} className="text-xs">
-                  {Array.isArray(section.content.list) &&
-                    section.content.list.map((skill: string, index: number) => (
-                      <div
-                        key={index}
-                        className="bg-slate-600 text-white px-2 py-1 rounded mb-1 text-xs flex items-center justify-center"
-                      >
-                        {skill}
-                      </div>
-                    ))}
+                <div key={section.id} className="text-xs space-y-2">
+                  {Array.isArray(section.content.skillsWithLevels) &&
+                  section.content.skillsWithLevels.length > 0
+                    ? section.content.skillsWithLevels.map(
+                        (skill: SkillWithLevel, index: number) => (
+                          <div key={index} className="space-y-1">
+                            <div className="text-white text-xs">
+                              {skill.name}
+                            </div>
+                            <div className="flex space-x-1">
+                              {[1, 2, 3, 4, 5].map((level) => (
+                                <div
+                                  key={level}
+                                  className={`w-4 h-1 rounded ${
+                                    level <= skill.level
+                                      ? "bg-blue-400"
+                                      : "bg-slate-600"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        ),
+                      )
+                    : Array.isArray(section.content.list) &&
+                      section.content.list.map(
+                        (skill: string, index: number) => (
+                          <div
+                            key={index}
+                            className="bg-slate-600 text-white px-2 py-1 rounded mb-1 text-xs flex items-center justify-center"
+                          >
+                            {skill}
+                          </div>
+                        ),
+                      )}
                 </div>
               ))}
           </div>
@@ -477,15 +515,34 @@ const ResumeBuilder = ({
               .filter((s) => s.type === "skills")
               .map((section) => (
                 <div key={section.id} className="space-y-2">
-                  {Array.isArray(section.content.list) &&
-                    section.content.list.map((skill: string, index: number) => (
-                      <div
-                        key={index}
-                        className="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs text-center min-h-[20px] flex items-center justify-center"
-                      >
-                        {skill}
-                      </div>
-                    ))}
+                  {Array.isArray(section.content.skillsWithLevels) &&
+                  section.content.skillsWithLevels.length > 0
+                    ? section.content.skillsWithLevels.map(
+                        (skill: SkillWithLevel, index: number) => (
+                          <div key={index} className="space-y-1">
+                            <div className="text-blue-800 text-xs font-medium">
+                              {skill.name}
+                            </div>
+                            <div className="w-full bg-blue-100 rounded-full h-2">
+                              <div
+                                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${(skill.level / 5) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                        ),
+                      )
+                    : Array.isArray(section.content.list) &&
+                      section.content.list.map(
+                        (skill: string, index: number) => (
+                          <div
+                            key={index}
+                            className="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs text-center min-h-[20px] flex items-center justify-center"
+                          >
+                            {skill}
+                          </div>
+                        ),
+                      )}
                 </div>
               ))}
           </div>
@@ -585,18 +642,44 @@ const ResumeBuilder = ({
                     <h2 className="text-lg font-semibold mb-2 text-purple-800">
                       Skills
                     </h2>
-                    <div className="flex flex-wrap gap-1">
-                      {Array.isArray(section.content.list) &&
-                        section.content.list.map(
-                          (skill: string, index: number) => (
-                            <span
-                              key={index}
-                              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-1 rounded text-xs flex items-center justify-center"
-                            >
-                              {skill}
-                            </span>
-                          ),
-                        )}
+                    <div className="space-y-3">
+                      {Array.isArray(section.content.skillsWithLevels) &&
+                      section.content.skillsWithLevels.length > 0
+                        ? section.content.skillsWithLevels.map(
+                            (skill: SkillWithLevel, index: number) => (
+                              <div
+                                key={index}
+                                className="flex items-center space-x-3"
+                              >
+                                <div className="w-20 text-xs font-medium text-purple-800">
+                                  {skill.name}
+                                </div>
+                                <div className="flex space-x-1">
+                                  {[1, 2, 3, 4, 5].map((level) => (
+                                    <div
+                                      key={level}
+                                      className={`w-6 h-2 rounded ${
+                                        level <= skill.level
+                                          ? "bg-gradient-to-r from-purple-500 to-pink-500"
+                                          : "bg-purple-200"
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            ),
+                          )
+                        : Array.isArray(section.content.list) &&
+                          section.content.list.map(
+                            (skill: string, index: number) => (
+                              <span
+                                key={index}
+                                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-1 rounded text-xs flex items-center justify-center inline-block mr-1 mb-1"
+                              >
+                                {skill}
+                              </span>
+                            ),
+                          )}
                     </div>
                   </div>
                 ))}
@@ -882,6 +965,14 @@ const ResumeBuilder = ({
           </div>
         );
       case "skills":
+        const hasSkillLevels =
+          Array.isArray(section.content.skillsWithLevels) &&
+          section.content.skillsWithLevels.length > 0;
+        const templateSupportsLevels =
+          selectedTemplate === "modern" ||
+          selectedTemplate === "marco" ||
+          selectedTemplate === "creative";
+
         return (
           <div className="space-y-4">
             <Label htmlFor={`skills-${section.id}`}>
@@ -899,11 +990,71 @@ const ResumeBuilder = ({
                   .split(",")
                   .map((skill) => skill.trim())
                   .filter(Boolean);
-                updateSection(section.id, { list: skillsList });
+
+                // Update both list and skillsWithLevels
+                const skillsWithLevels = skillsList.map((skillName) => {
+                  const existingSkill = section.content.skillsWithLevels?.find(
+                    (s: SkillWithLevel) => s.name === skillName,
+                  );
+                  return {
+                    name: skillName,
+                    level: existingSkill?.level || 3, // Default to level 3
+                  };
+                });
+
+                updateSection(section.id, {
+                  list: skillsList,
+                  skillsWithLevels: skillsWithLevels,
+                });
               }}
               placeholder="JavaScript, React, Project Management, etc."
               className="min-h-[80px]"
             />
+
+            {templateSupportsLevels &&
+              Array.isArray(section.content.skillsWithLevels) &&
+              section.content.skillsWithLevels.length > 0 && (
+                <div className="space-y-4">
+                  <Label>Skill Levels</Label>
+                  <div className="space-y-3">
+                    {section.content.skillsWithLevels.map(
+                      (skill: SkillWithLevel, index: number) => (
+                        <div key={index} className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <Label className="text-sm font-medium">
+                              {skill.name}
+                            </Label>
+                            <span className="text-sm text-muted-foreground">
+                              Level {skill.level}/5
+                            </span>
+                          </div>
+                          <Slider
+                            value={[skill.level]}
+                            onValueChange={(value) => {
+                              const updatedSkills = [
+                                ...section.content.skillsWithLevels,
+                              ];
+                              updatedSkills[index] = {
+                                ...skill,
+                                level: value[0],
+                              };
+                              updateSection(section.id, {
+                                ...section.content,
+                                skillsWithLevels: updatedSkills,
+                              });
+                            }}
+                            max={5}
+                            min={1}
+                            step={1}
+                            className="w-full"
+                          />
+                        </div>
+                      ),
+                    )}
+                  </div>
+                </div>
+              )}
+
             <div className="flex flex-wrap gap-2 mt-2">
               {Array.isArray(section.content.list) &&
                 section.content.list.map((skill: string, index: number) => (
